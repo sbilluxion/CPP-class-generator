@@ -1,5 +1,6 @@
 // Supported description types and their C++ equivalents.
 export const cppTypes: ReadonlyMap<string, string> = new Map([
+    ['str', 'std::string'],
     ['string', 'std::string'],
     ['std::string', 'std::string'],
     ['int', 'int'],

@@ -1,5 +1,7 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
+import { generateClass } from '../generator';
+import { parseClass } from '../parser';
 
 suite('Class generation command', () => {
     test('replaces only the selection and supports undo', async () => {
@@ -10,7 +12,7 @@ suite('Class generation command', () => {
         editor.selection = new vscode.Selection(1, 0, 1, description.length);
         await vscode.commands.executeCommand('classGenerator.generate');
         assert.strictEqual(document.getText(),
-            '// Before\n#include <string>\n\nclass Student {\npublic:\n    std::string name{};\n    int age{};\n};\n// After\n');
+            `// Before\n${generateClass(parseClass(description))}\n// After\n`);
         await vscode.commands.executeCommand('undo');
         assert.strictEqual(document.getText(), original);
     });

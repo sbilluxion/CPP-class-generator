@@ -13,7 +13,29 @@ test('slash-separated and multiline descriptions produce the same model', () => 
 
 test('generates initialized fields and the string header once', () => {
     assert.equal(generateClass(parseClass('class Student / name: string / age: int')),
-        '#include <string>\n\nclass Student {\npublic:\n    std::string name{};\n    int age{};\n};');
+        `#include <string>
+
+class Student {
+public:
+    std::string name{};
+    int age{};
+
+    const std::string& getName() const {
+        return this->name;
+    }
+
+    void setName(const std::string& value) {
+        this->name = value;
+    }
+
+    int getAge() const {
+        return this->age;
+    }
+
+    void setAge(int value) {
+        this->age = value;
+    }
+};`);
     const code = generateClass(parseClass('class Names / first: string / last: std::string'));
     assert.equal(code.match(/#include/g)?.length, 1);
 });
@@ -23,7 +45,7 @@ test('supports empty classes and scalar types without includes', () => {
     const types = ['int', 'float', 'double', 'bool', 'char', 'short', 'long', 'long long', 'unsigned int'];
     for (const type of types) {
         assert.equal(generateClass(parseClass(`class Value / value: ${type}`)),
-            `class Value {\npublic:\n    ${type} value{};\n};`);
+            `class Value {\npublic:\n    ${type} value{};\n\n    ${type} getValue() const {\n        return this->value;\n    }\n\n    void setValue(${type} value) {\n        this->value = value;\n    }\n};`);
     }
 });
 
@@ -35,5 +57,17 @@ test('rejects invalid descriptions instead of silently discarding data', () => {
         'class A / class B'];
     for (const text of invalid) {
         assert.throws(() => parseClass(text), Error, text);
+    }
+});
+
+test('rejects accessor name collisions', () => {
+    for (const text of [
+        'class A / age: int / Age: int',
+        'class A / age: int / getAge: int',
+        'class A / setAge: int / age: int',
+        'class getAge / age: int',
+        'class setAge / age: int'
+    ]) {
+        assert.throws(() => generateClass(parseClass(text)), /конфликтует/);
     }
 });
