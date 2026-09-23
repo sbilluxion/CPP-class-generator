@@ -16,7 +16,10 @@ export function parseClass(text: string): ClassInfo {
             throw new Error(`Некорректное поле «${part}». Ожидается имя: тип`);
         }
         const [, name, rawType] = match;
-        const type = rawType.trim().replace(/\s+/g, ' ');
+        const normalizedType = rawType.trim().replace(/\s+/g, ' ');
+        const modifier = / (public|private)$/.exec(normalizedType);
+        const access = modifier?.[1] === 'private' ? 'private' : 'public';
+        const type = modifier ? normalizedType.slice(0, modifier.index) : normalizedType;
         if (!isCppIdentifier(name) || name === result.name) {
             throw new Error(`Недопустимое имя поля «${name}»`);
         }
@@ -27,7 +30,7 @@ export function parseClass(text: string): ClassInfo {
             throw new Error(`Неизвестный тип «${type}». Поддерживаются: ${[...cppTypes.keys()].join(', ')}`);
         }
         names.add(name);
-        result.fields.push({ name, type });
+        result.fields.push({ name, type, access });
     }
     return result;
 }

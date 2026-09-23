@@ -40,8 +40,13 @@ export function generateClass(info: ClassInfo, surroundingText = ''): string {
     const hasStringInclude = /^[\t ]*#[\t ]*include[\t ]*<string>[\t ]*\r?$/m.test(code);
     const lines = needsString && !hasStringInclude ? ['#include <string>', ''] : [];
     lines.push(`class ${info.name} {`);
+    const privateFields = fields.filter((_, index) => info.fields[index].access === 'private');
+    const publicFields = fields.filter((_, index) => info.fields[index].access !== 'private');
+    if (privateFields.length > 0) {
+        lines.push('private:', ...privateFields, '');
+    }
     if (fields.length > 0) {
-        lines.push('public:', ...fields, ...methods);
+        lines.push('public:', ...publicFields, ...methods);
     }
     lines.push('};');
     return lines.join('\n');
