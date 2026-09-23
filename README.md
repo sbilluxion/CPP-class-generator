@@ -1,71 +1,64 @@
-# cpp-class-generator README
+# CPP-class-generator
 
-This is the README for your extension "cpp-class-generator". After writing up a brief description, we recommend including the following sections.
+Расширение VS Code преобразует выделенное описание в C++-класс (C++11 и новее).
 
-## Features
+## Использование
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+1. Введите описание и выделите его целиком:
 
-For example if there is an image subfolder under your extension project workspace:
+   ```text
+   class Student
+   name: str
+   age: int
+   ```
 
-\!\[feature X\]\(images/feature-x.png\)
+   Можно записать в одну строку: `class Student / name: str / age: int`.
+   `str`, `string` и `std::string` обозначают один и тот же строковый тип.
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+2. Откройте палитру команд (`Ctrl+Shift+P` / `Cmd+Shift+P`).
+3. Выполните **CPP: Generate Class from Selection**.
 
-## Requirements
+Выделение заменится на:
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+```cpp
+#include <string>
 
-## Extension Settings
+class Student {
+public:
+    std::string name{};
+    int age{};
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+    const std::string& getName() const {
+        return this->name;
+    }
 
-For example:
+    void setName(const std::string& value) {
+        this->name = value;
+    }
 
-This extension contributes the following settings:
+    int getAge() const {
+        return this->age;
+    }
 
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
+    void setAge(int value) {
+        this->age = value;
+    }
+};
+```
 
-## Known Issues
+Поля публичные, с инициализацией по умолчанию: числа — нулём, `bool` — `false`, строки — пустые. Для каждого поля добавляются публичные методы `getX() const` и `setX(value)`: первая буква имени поля переводится в верхний регистр. Строки передаются и возвращаются по `const std::string&`, остальные типы — по значению. Конфликты имён методов вызывают ошибку без изменения текста. Замену можно отменить обычной командой Undo.
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+Поддерживаются типы `string`, `std::string`, `int`, `float`, `double`, `bool`, `char`, `short`, `long`, `long long`, `unsigned int`. Пустые строки игнорируются; класс без полей допустим. Имена должны начинаться с латинской буквы и содержать только латинские буквы, цифры и `_`; ключевые слова C++ и двойное подчёркивание запрещены. Повторные имена полей, имя поля, совпадающее с именем класса, и неизвестные типы вызывают сообщение об ошибке без изменения текста.
 
-## Release Notes
+Генерируется самостоятельный фрагмент: размещайте описание на верхнем уровне файла, вне функций и пространств имён. Для строк добавляется `#include <string>`; существующие include в документе не анализируются. Обрабатывается основное выделение.
 
-Users appreciate release notes as you update your extension.
+## Разработка
 
-### 1.0.0
+```sh
+npm install
+npm run compile
+npm run lint
+npm run test:unit
+```
 
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
-
----
-
-## Following extension guidelines
-
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
-
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
-
-## Working with Markdown
-
-You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
-
-## For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+Нажмите `F5` в VS Code для запуска Extension Development Host. `npm test` запускает интеграционные тесты в VS Code (при первом запуске может потребоваться загрузка тестовой версии редактора).

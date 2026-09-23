@@ -1,7 +1,7 @@
 {
   "name": "cpp-class-generator",
   "displayName": "CPP-class-generator",
-  "description": "",
+  "description": "Generate a C++ class from a selected class and field description.",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.138.0"
@@ -14,8 +14,8 @@
   "contributes": {
     "commands": [
       {
-        "command": "cpp-class-generator.helloWorld",
-        "title": "Hello World"
+        "command": "classGenerator.generate",
+        "title": "CPP: Generate Class from Selection"
       }
     ]
   },
@@ -25,7 +25,8 @@
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src",
-    "test": "vscode-test"
+    "test": "vscode-test",
+    "test:unit": "npm run compile && node --test out/test/parser-generator.test.js"
   },
   "devDependencies": {
     "@types/vscode": "^1.138.0",
