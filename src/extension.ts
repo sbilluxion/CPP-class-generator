@@ -28,7 +28,10 @@ export function activate(context: vscode.ExtensionContext) {
 
             try {
                 const eol = editor.document.eol === vscode.EndOfLine.CRLF ? '\r\n' : '\n';
-                const generatedCode = generateClass(parseClass(text)).replace(/\n/g, eol);
+                const documentText = editor.document.getText();
+                const surroundingText = documentText.slice(0, editor.document.offsetAt(selection.start))
+                    + documentText.slice(editor.document.offsetAt(selection.end));
+                const generatedCode = generateClass(parseClass(text), surroundingText).replace(/\n/g, eol);
                 const applied = await editor.edit(editBuilder => {
                     editBuilder.replace(selection, generatedCode);
                 });

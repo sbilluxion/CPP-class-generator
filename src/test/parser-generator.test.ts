@@ -3,6 +3,20 @@ import { test } from 'node:test';
 import { parseClass } from '../parser';
 import { generateClass } from '../generator';
 
+test('adds string include only when missing for all string aliases', () => {
+    for (const type of ['str', 'string', 'std::string']) {
+        const info = parseClass(`class Student / name: ${type}`);
+        for (const existing of ['#include <string>\n', '  # include<string> // strings\r\n',
+            '#include /* strings */ <string>\n']) {
+            assert.ok(!generateClass(info, existing).includes('#include'));
+        }
+        for (const existing of ['', '#include <string_view>\n', '// #include <string>\n',
+            '/*\n#include <string>\n*/', 'const char* s = R"(\n#include <string>\n)";']) {
+            assert.ok(generateClass(info, existing).startsWith('#include <string>\n'));
+        }
+    }
+});
+
 test('slash-separated and multiline descriptions produce the same model', () => {
     const expected = { name: 'Student', fields: [
         { name: 'name', type: 'string' }, { name: 'age', type: 'int' }
