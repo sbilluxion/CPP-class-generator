@@ -1,15 +1,26 @@
 import * as assert from 'assert';
-
-// You can import and use all API from the 'vscode' module
-// as well as import your extension to test it
 import * as vscode from 'vscode';
-// import * as myExtension from '../../extension';
 
-suite('Extension Test Suite', () => {
-	vscode.window.showInformationMessage('Start all tests.');
+suite('Class generation command', () => {
+    test('replaces only the selection and supports undo', async () => {
+        const description = 'class Student / name: string / age: int';
+        const original = `// Before\n${description}\n// After\n`;
+        const document = await vscode.workspace.openTextDocument({ content: original, language: 'cpp' });
+        const editor = await vscode.window.showTextDocument(document);
+        editor.selection = new vscode.Selection(1, 0, 1, description.length);
+        await vscode.commands.executeCommand('classGenerator.generate');
+        assert.strictEqual(document.getText(),
+            '// Before\n#include <string>\n\nclass Student {\npublic:\n    std::string name{};\n    int age{};\n};\n// After\n');
+        await vscode.commands.executeCommand('undo');
+        assert.strictEqual(document.getText(), original);
+    });
 
-	test('Sample test', () => {
-		assert.strictEqual(-1, [1, 2, 3].indexOf(5));
-		assert.strictEqual(-1, [1, 2, 3].indexOf(0));
-	});
+    test('invalid input is preserved', async () => {
+        const original = 'class Student / age: unknown';
+        const document = await vscode.workspace.openTextDocument({ content: original });
+        const editor = await vscode.window.showTextDocument(document);
+        editor.selection = new vscode.Selection(0, 0, 0, original.length);
+        await vscode.commands.executeCommand('classGenerator.generate');
+        assert.strictEqual(document.getText(), original);
+    });
 });
