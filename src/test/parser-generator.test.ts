@@ -3,9 +3,23 @@ import { test } from 'node:test';
 import { parseClass } from '../parser';
 import { generateClass } from '../generator';
 
+test('adds string include only when missing for all string aliases', () => {
+    for (const type of ['str', 'string', 'std::string']) {
+        const info = parseClass(`class Student / name: ${type}`);
+        for (const existing of ['#include <string>\n', '  # include<string> // strings\r\n',
+            '#include /* strings */ <string>\n']) {
+            assert.ok(!generateClass(info, existing).includes('#include'));
+        }
+        for (const existing of ['', '#include <string_view>\n', '// #include <string>\n',
+            '/*\n#include <string>\n*/', 'const char* s = R"(\n#include <string>\n)";']) {
+            assert.ok(generateClass(info, existing).startsWith('#include <string>\n'));
+        }
+    }
+});
+
 test('slash-separated and multiline descriptions produce the same model', () => {
     const expected = { name: 'Student', fields: [
-        { name: 'name', type: 'string' }, { name: 'age', type: 'int' }
+        { name: 'name', type: 'string', access: 'public' }, { name: 'age', type: 'int', access: 'public' }
     ] };
     assert.deepEqual(parseClass('class Student / name: string / age: int'), expected);
     assert.deepEqual(parseClass('\r\n class Student\r\n\r\n name: string\r\n age: int\r\n'), expected);
@@ -70,4 +84,25 @@ test('rejects accessor name collisions', () => {
     ]) {
         assert.throws(() => generateClass(parseClass(text)), /конфликтует/);
     }
+});
+
+test('parses access modifiers including multiword types and default public', () => {
+    assert.deepEqual(parseClass('class Student / name: str private / age: unsigned int public / count: long long').fields, [
+        { name: 'name', type: 'str', access: 'private' },
+        { name: 'age', type: 'unsigned int', access: 'public' },
+        { name: 'count', type: 'long long', access: 'public' }
+    ]);
+    for (const suffix of ['protected', 'private public', 'public private']) {
+        assert.throws(() => parseClass(`class A / value: int ${suffix}`));
+    }
+});
+
+test('groups fields by access and keeps accessors public', () => {
+    const code = generateClass(parseClass('class Student / age: int public / name: string private / count: int'));
+    assert.ok(code.includes('private:\n    std::string name{};\n\npublic:\n    int age{};\n    int count{};'));
+    assert.ok(code.indexOf('getName() const') > code.indexOf('public:'));
+    assert.ok(code.indexOf('setName(') > code.indexOf('public:'));
+    const privateOnly = generateClass(parseClass('class Value / value: int private'));
+    assert.ok(privateOnly.includes('private:\n    int value{};\n\npublic:'));
+    assert.ok(privateOnly.indexOf('getValue() const') > privateOnly.indexOf('public:'));
 });

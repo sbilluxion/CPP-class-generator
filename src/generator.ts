@@ -1,7 +1,7 @@
 import { ClassInfo } from './models/ClassInfo';
 import { cppTypes } from './cpp';
 
-export function generateClass(info: ClassInfo): string {
+export function generateClass(info: ClassInfo, surroundingText = ''): string {
     const memberNames = new Set([info.name, ...info.fields.map(field => field.name)]);
     const methods: string[] = [];
     const fields = info.fields.map(field => {
@@ -32,10 +32,21 @@ export function generateClass(info: ClassInfo): string {
         return `    ${type} ${field.name}{};`;
     });
     const needsString = info.fields.some(field => cppTypes.get(field.type) === 'std::string');
-    const lines = needsString ? ['#include <string>', ''] : [];
+    // Preserve line boundaries while ignoring comments and string literals.
+    const code = surroundingText.replace(
+        /\/\*[\s\S]*?\*\/|\/\/[^\r\n]*|R"([^\s()\\]{0,16})\([\s\S]*?\)\1"|"(?:\\[\s\S]|[^"\\])*"|'(?:\\[\s\S]|[^'\\])*'/g,
+        match => match.replace(/[^\r\n]/g, ' ')
+    );
+    const hasStringInclude = /^[\t ]*#[\t ]*include[\t ]*<string>[\t ]*\r?$/m.test(code);
+    const lines = needsString && !hasStringInclude ? ['#include <string>', ''] : [];
     lines.push(`class ${info.name} {`);
+    const privateFields = fields.filter((_, index) => info.fields[index].access === 'private');
+    const publicFields = fields.filter((_, index) => info.fields[index].access !== 'private');
+    if (privateFields.length > 0) {
+        lines.push('private:', ...privateFields, '');
+    }
     if (fields.length > 0) {
-        lines.push('public:', ...fields, ...methods);
+        lines.push('public:', ...publicFields, ...methods);
     }
     lines.push('};');
     return lines.join('\n');

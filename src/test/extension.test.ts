@@ -4,6 +4,18 @@ import { generateClass } from '../generator';
 import { parseClass } from '../parser';
 
 suite('Class generation command', () => {
+    test('keeps an existing string include without duplicating it', async () => {
+        const description = 'class Student / name: str';
+        const document = await vscode.workspace.openTextDocument({
+            content: `#include <string>\n${description}\n`, language: 'cpp'
+        });
+        const editor = await vscode.window.showTextDocument(document);
+        editor.selection = new vscode.Selection(1, 0, 1, description.length);
+        await vscode.commands.executeCommand('classGenerator.generate');
+        assert.strictEqual(document.getText().match(/#include <string>/g)?.length, 1);
+        assert.ok(document.getText().includes('std::string name{};'));
+    });
+
     test('replaces only the selection and supports undo', async () => {
         const description = 'class Student / name: string / age: int';
         const original = `// Before\n${description}\n// After\n`;

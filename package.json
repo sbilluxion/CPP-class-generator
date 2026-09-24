@@ -3,6 +3,10 @@
   "displayName": "CPP-class-generator",
   "description": "Generate a C++ class from a selected class and field description.",
   "version": "0.0.1",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sbilluxion/CPP-class-generator.git"
+  },
   "engines": {
     "vscode": "^1.138.0"
   },
