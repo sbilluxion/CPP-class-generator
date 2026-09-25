@@ -1,24 +1,34 @@
 # CPP-class-generator
 
-Расширение VS Code преобразует выделенное описание в C++-класс (C++11 и новее).
+>Made by: Sergey Balberin, M3101, ITMO
 
-## Использование
+VS code extension that generates class in C++ according to it's description
 
-1. Введите описание и выделите его целиком:
+1. [Installation](#installation)
+2. [How to use it](#how-to-use-it)
+
+## Installation
+1. Download .vsix file from [Releases](https://github.com/sbilluxion/CPP-class-generator/releases/latest) 
+2. Open directory with .vsix file in VS code or drop it into your working directory
+3. Click .vsix file with RMB
+4. Select "Install extension with VSIX"
+
+## How to use it
+
+1. Enter description and select it:
 
    ```text
    class Student
    name: str
    age: int
    ```
+>[!NOTE]
+>   You can enter description in one line : `class Student / name: str / age: int`.
 
-   Можно записать в одну строку: `class Student / name: str / age: int`.
-   `str`, `string` и `std::string` обозначают один и тот же строковый тип.
+2. Open command palette (`Ctrl+Shift+P` / `Cmd+Shift+P`).
+3. Execute **CPP: Generate Class from Selection**.
 
-2. Откройте палитру команд (`Ctrl+Shift+P` / `Cmd+Shift+P`).
-3. Выполните **CPP: Generate Class from Selection**.
-
-Выделение заменится на:
+Selection will change to:
 
 ```cpp
 #include <string>
@@ -46,21 +56,10 @@ public:
 };
 ```
 
-После типа можно указать доступ: `name: string private` или `age: int public`. Без модификатора поле попадает в `public`. Приватные поля размещаются в секции `private`, а их геттеры и сеттеры остаются публичными. Например: `class Student / name: str private / age: int public / score: double`.
+>[!IMPORTANT]
+>You can select field's accessibility by typing **public** or **private** after it's name. If you leave field without accesibility parameter it will automatically appear in **public**.
 
-Все поля создаются с инициализацией по умолчанию: числа — нулём, `bool` — `false`, строки — пустые. Для каждого поля добавляются публичные методы `getX() const` и `setX(value)`: первая буква имени поля переводится в верхний регистр. Строки передаются и возвращаются по `const std::string&`, остальные типы — по значению. Конфликты имён методов вызывают ошибку без изменения текста. Замену можно отменить обычной командой Undo.
+**Supported types**: string, int, float, double, bool, char, short, long, long long, unsigned int
 
-Поддерживаются типы `string`, `std::string`, `int`, `float`, `double`, `bool`, `char`, `short`, `long`, `long long`, `unsigned int`. Пустые строки игнорируются; класс без полей допустим. Имена должны начинаться с латинской буквы и содержать только латинские буквы, цифры и `_`; ключевые слова C++ и двойное подчёркивание запрещены. Повторные имена полей, имя поля, совпадающее с именем класса, и неизвестные типы вызывают сообщение об ошибке без изменения текста.
 
-Генерируется самостоятельный фрагмент: размещайте описание на верхнем уровне файла, вне функций и пространств имён. Для `str`, `string` и `std::string` добавляется `#include <string>`, только если такого подключения ещё нет в документе вне заменяемого выделения. Подключения в комментариях и строковых литералах не учитываются; условия препроцессора не вычисляются. Обрабатывается основное выделение.
 
-## Разработка
-
-```sh
-npm install
-npm run compile
-npm run lint
-npm run test:unit
-```
-
-Нажмите `F5` в VS Code для запуска Extension Development Host. `npm test` запускает интеграционные тесты в VS Code (при первом запуске может потребоваться загрузка тестовой версии редактора).
